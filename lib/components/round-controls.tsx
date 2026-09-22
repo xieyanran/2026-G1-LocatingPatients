@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/lib/base-ui/input-group"
 import { NewPatientDialog } from "./new-patient-dialog"
 import { Button } from "@/lib/base-ui/button"
-import { IconPlus, IconSearch } from "@tabler/icons-react"
+import { IconLogout, IconPlus, IconSearch } from "@tabler/icons-react"
 import type { Patient } from "@/lib/data/patients"
+import { signOut } from "@/lib/actions/auth"
 
 const RoundSearchContext = createContext<{
   query: string
@@ -62,6 +63,9 @@ export function HeaderControls({ patients }: { patients: Patient[] }) {
           </Button>
         }
       />
+      <Button size="icon-sm" variant="ghost" onClick={() => signOut()} aria-label="Sign out">
+        <IconLogout />
+      </Button>
     </div>
   )
 }

@@ -31,6 +31,7 @@ export const PatientFormSchema = z.object({
   careLevelMedicine: z.enum(["A", "B", "C"]).optional(),
   careLevelNursing: z.enum(["1", "2", "3"]).optional(),
   quickIcons: z.array(QuickIconSchema).optional(),
+  protectedIdentity: z.boolean().optional(),
 })
 
 export type PatientFormValues = z.infer<typeof PatientFormSchema>
@@ -45,6 +46,7 @@ export const patientFormDefaults: PatientFormValues = {
   careLevelMedicine: undefined,
   careLevelNursing: undefined,
   quickIcons: [],
+  protectedIdentity: false,
 }
 
 interface PatientFormFieldsProps {
@@ -54,6 +56,12 @@ interface PatientFormFieldsProps {
   formId: string
   idPrefix: string
   disablePersonalNumber?: boolean
+  /** True when this patient already has protected_identity set — the name
+   * shown here is the masked "XXXX" placeholder, not the real value, so the
+   * field must stay read-only. (Editing it would save "XXXX" as the real
+   * name.) There's no unmask flow: once protected, the name can't be
+   * changed through this form again. */
+  nameLocked?: boolean
 }
 
 export function PatientFormFields({
@@ -63,6 +71,7 @@ export function PatientFormFields({
   formId,
   idPrefix,
   disablePersonalNumber = false,
+  nameLocked = false,
 }: PatientFormFieldsProps) {
   const {
     register,
@@ -78,12 +87,20 @@ export function PatientFormFields({
         <div className="flex gap-2">
           <Field data-invalid={!!e.name}>
             <FieldLabel htmlFor={`${idPrefix}-name`}>Name *</FieldLabel>
-            <Input
-              id={`${idPrefix}-name`}
-              aria-invalid={!!e.name}
-              {...register("name")}
-            />
-            <FieldError errors={[e.name]} />
+            {nameLocked ? (
+              <span className="text-sm text-muted-foreground">
+                {form.watch("name") || "XXXX"} (protected — locked)
+              </span>
+            ) : (
+              <>
+                <Input
+                  id={`${idPrefix}-name`}
+                  aria-invalid={!!e.name}
+                  {...register("name")}
+                />
+                <FieldError errors={[e.name]} />
+              </>
+            )}
           </Field>
 
           <Field className="w-50">
@@ -173,6 +190,18 @@ export function PatientFormFields({
               />
             )}
           />
+        </Field>
+
+        <Field orientation="horizontal">
+          <input
+            id={`${idPrefix}-protected-identity`}
+            type="checkbox"
+            className="size-4 rounded border-input"
+            {...register("protectedIdentity")}
+          />
+          <FieldLabel htmlFor={`${idPrefix}-protected-identity`}>
+            Protected identity (shows as &quot;XXXX&quot; to staff)
+          </FieldLabel>
         </Field>
 
         <Field>

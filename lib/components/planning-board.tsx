@@ -59,9 +59,10 @@ import {
   useBedEventDraft,
   type BedEventDraft,
 } from "@/lib/components/bed-event-draft"
-import { saveBoardData, fetchBoardData } from "@/lib/supabase/planning"
-import { editPatient, mapPatientRow } from "@/lib/supabase/patients"
-import { setPatientLocation } from "@/lib/actions/patients"
+import { fetchBoardData } from "@/lib/supabase/planning"
+import { mapPatientRow } from "@/lib/supabase/patients"
+import { editPatient, setPatientLocation } from "@/lib/actions/patients"
+import { saveBoardData } from "@/lib/actions/planning"
 import { createClient } from "@/lib/supabase/client"
 import type { Tables } from "@/lib/supabase/types"
 import type {

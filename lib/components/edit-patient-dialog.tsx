@@ -30,6 +30,7 @@ function patientToValues(patient: Patient): PatientFormValues {
       ? (String(patient.careLevel.nursing) as "1" | "2" | "3")
       : undefined,
     quickIcons: patient.quickIcons,
+    protectedIdentity: patient.protectedIdentity,
   }
 }
 
@@ -56,7 +57,10 @@ function EditPatientForm({
   function onSubmit(values: PatientFormValues) {
     startTransition(async () => {
       await editPatient(patient.id, {
-        name: values.name,
+        // A patient already protected when the dialog opened has "XXXX" as
+        // `values.name` (see patientToValues) — never send it back as a
+        // real name update. Renaming a protected patient isn't supported.
+        name: patient.protectedIdentity ? undefined : values.name,
         personalNumber: values.personalNumber || null,
         note: values.note || null,
         plannedCheckIn: values.plannedCheckIn || null,
@@ -70,6 +74,7 @@ function EditPatientForm({
               }
             : null,
         quickIcons: values.quickIcons ?? [],
+        protectedIdentity: values.protectedIdentity ?? false,
       })
       close()
     })
@@ -88,6 +93,7 @@ function EditPatientForm({
         formId={FORM_ID}
         idPrefix="ep"
         disablePersonalNumber={disablePersonalNumber}
+        nameLocked={patient.protectedIdentity}
       />
       <FloatingPanelFooter>
         <Button variant="outline" onClick={handleCancel}>

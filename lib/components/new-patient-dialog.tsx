@@ -52,6 +52,7 @@ function NewPatientForm({
               }
             : null,
         quickIcons: values.quickIcons ?? [],
+        protectedIdentity: values.protectedIdentity ?? false,
       })
       close()
       onAdded?.(id)

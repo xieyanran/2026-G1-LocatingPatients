@@ -111,7 +111,7 @@ export function PatientDetails({
         />
         <DeletePatientAlert
           patientId={patient.id}
-          patientName={patient.name}
+          patientName={name}
           onDeleted={onDeleted}
           trigger={
             <Button variant="destructive">

@@ -86,6 +86,10 @@ export const PatientSchema = z.object({
   personalNumber: PersonalNumberSchema,
   careLevel: CareLevelSchema.nullable(),
   quickIcons: z.array(QuickIconSchema).default([]),
+  /** PRD 4.1: staff other than coordinator/admin should see "XXXX" instead
+   * of the real name. The real value is still stored — masking happens at
+   * render time via `displayPatientName()`, not here. */
+  protectedIdentity: z.boolean().default(false),
 })
 
 /** Input for creating a patient. Only `name` is required; all other fields default to null. */
@@ -99,6 +103,7 @@ export const CreatePatientInputSchema = z.object({
   personalNumber: PersonalNumberSchema.optional(),
   careLevel: CareLevelSchema.nullable().optional(),
   quickIcons: z.array(QuickIconSchema).optional(),
+  protectedIdentity: z.boolean().optional(),
 })
 
 /** All fields optional — only provided fields are written. */
