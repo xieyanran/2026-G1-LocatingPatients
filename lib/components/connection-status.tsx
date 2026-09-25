@@ -10,7 +10,7 @@ type Status = "connecting" | "good" | "degraded" | "lost"
 export function ConnectionStatus() {
   const [status, setStatus] = useState<Status>("connecting")
   const [disconnectedAt, setDisconnectedAt] = useState<number | null>(null)
-  const [tick, setTick] = useState(0)
+  const [now, setNow] = useState<number | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -25,10 +25,14 @@ export function ConnectionStatus() {
         state === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR ||
         state === REALTIME_SUBSCRIBE_STATES.TIMED_OUT
       ) {
-        setDisconnectedAt((prev) => prev ?? Date.now())
+        const eventTime = Date.now()
+        setDisconnectedAt((prev) => prev ?? eventTime)
+        setNow(eventTime)
         setStatus("lost")
       } else if (state === REALTIME_SUBSCRIBE_STATES.CLOSED) {
-        setDisconnectedAt((prev) => prev ?? Date.now())
+        const eventTime = Date.now()
+        setDisconnectedAt((prev) => prev ?? eventTime)
+        setNow(eventTime)
         setStatus("degraded")
       }
     })
@@ -38,19 +42,16 @@ export function ConnectionStatus() {
     }
   }, [])
 
-  // Tick every 250 ms so the age text stays current when degraded/lost
+  // Refresh `now` every 250 ms so the age text stays current when degraded/lost
   useEffect(() => {
     if (status === "good" || status === "connecting") return
-    const id = setInterval(() => setTick((t) => t + 1), 250)
+    const id = setInterval(() => setNow(Date.now()), 250)
     return () => clearInterval(id)
   }, [status])
 
-  // Keep tick reference used so linter doesn't complain
-  void tick
-
   const age =
-    disconnectedAt !== null
-      ? Math.floor((Date.now() - disconnectedAt) / 1000)
+    disconnectedAt !== null && now !== null
+      ? Math.floor((now - disconnectedAt) / 1000)
       : null
 
   const label =
