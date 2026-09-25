@@ -16,6 +16,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.test.ts"],
-    exclude: ["node_modules/**", ".next/**"],
+    // tests/integration/** needs a live local Supabase stack (`supabase
+    // start`) and its own globalSetup — run separately via `pnpm test:integration`.
+    // tests/e2e/** are Playwright specs, run via `pnpm test:e2e` instead.
+    exclude: ["node_modules/**", ".next/**", "tests/integration/**", "tests/e2e/**"],
   },
 })

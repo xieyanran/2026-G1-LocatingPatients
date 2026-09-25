@@ -274,6 +274,10 @@ export type Database = {
     }
     Functions: {
       current_user_role: { Args: never; Returns: string }
+      swap_patient_locations: {
+        Args: { patient_a_id: string; patient_b_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

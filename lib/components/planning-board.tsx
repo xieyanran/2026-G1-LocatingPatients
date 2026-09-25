@@ -61,7 +61,7 @@ import {
 } from "@/lib/components/bed-event-draft"
 import { fetchBoardData } from "@/lib/supabase/planning"
 import { mapPatientRow } from "@/lib/supabase/patients"
-import { editPatient, setPatientLocation } from "@/lib/actions/patients"
+import { editPatient, setPatientLocation, swapPatientLocations } from "@/lib/actions/patients"
 import { saveBoardData } from "@/lib/actions/planning"
 import { createClient } from "@/lib/supabase/client"
 import type { Tables } from "@/lib/supabase/types"
@@ -667,22 +667,15 @@ function parseBedKey(key: string): PatientLocation {
 function BedSlotSwapContent({
   patientA,
   patientB,
-  fromBedKey,
-  toBedKey,
 }: {
   patientA: Patient
   patientB: Patient
-  fromBedKey: string
-  toBedKey: string
 }) {
   const { close } = useFloatingPanel()
 
   function confirm() {
-    const fromLoc = parseBedKey(fromBedKey)
-    const toLoc = parseBedKey(toBedKey)
     startTransition(() => {
-      setPatientLocation(patientA.id, toLoc)
-      setPatientLocation(patientB.id, fromLoc)
+      swapPatientLocations(patientA.id, patientB.id)
     })
     close()
   }
@@ -2073,8 +2066,6 @@ export default function PlanningBoard({
             <BedSlotSwapContent
               patientA={patient}
               patientB={targetPatient}
-              fromBedKey={fromBedKey}
-              toBedKey={toBedKey}
             />
           ),
         })

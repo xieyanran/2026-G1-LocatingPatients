@@ -14,6 +14,27 @@ import type { TablesUpdate } from './types'
 // see supabase/migrations/20260920100200_enable_rls.sql for why RLS's own
 // row-level policies can't express a column-level restriction by themselves.
 
+/** Thrown when a write would seat two patients in the same bed. Two
+ * concurrent moves onto the same free bed can both pass an in-app "is this
+ * bed free?" check before either write lands, so the actual guard is the
+ * `patients_location_occupied_key` unique constraint (see
+ * supabase/migrations/20260925120200_enforce_bed_uniqueness.sql) — this
+ * turns that constraint's raw unique-violation into an error callers can
+ * recognise and show as a normal "pick another bed" conflict. */
+export class BedOccupiedError extends Error {
+  constructor() {
+    super('That bed is already occupied by another patient.')
+    this.name = 'BedOccupiedError'
+  }
+}
+
+function throwPatientWriteError(error: { code?: string; message: string }): never {
+  if (error.code === '23505' && error.message.includes('patients_location_occupied_key')) {
+    throw new BedOccupiedError()
+  }
+  throw error
+}
+
 export async function addPatient(input: CreatePatientInput): Promise<string> {
   await requireRole('coordinator', 'admin')
   const parsed = CreatePatientInputSchema.parse(input)
@@ -36,7 +57,7 @@ export async function addPatient(input: CreatePatientInput): Promise<string> {
     })
     .select('id')
     .single()
-  if (error) throw error
+  if (error) throwPatientWriteError(error)
   return data.id
 }
 
@@ -53,7 +74,26 @@ export async function setPatientLocation(
       location_bed: location?.bed ?? null,
     })
     .eq('id', patientId)
-  if (error) throw error
+  if (error) throwPatientWriteError(error)
+}
+
+/** Swaps two patients into each other's current beds. Written as two plain
+ * UPDATEs this always collides with `patients_location_occupied_key` (the
+ * first patient's destination bed is still occupied by the second patient
+ * until *their* update runs) — see
+ * supabase/migrations/20260925120200_enforce_bed_uniqueness.sql for why
+ * this needs a dedicated RPC rather than two `setPatientLocation` calls. */
+export async function swapPatientLocations(
+  patientAId: string,
+  patientBId: string,
+): Promise<void> {
+  await requireRole('nurse', 'coordinator', 'admin')
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('swap_patient_locations', {
+    patient_a_id: patientAId,
+    patient_b_id: patientBId,
+  })
+  if (error) throwPatientWriteError(error)
 }
 
 export async function editPatient(
@@ -115,7 +155,7 @@ export async function editPatient(
   if (Object.keys(update).length === 0) return
 
   const { error } = await supabase.from('patients').update(update).eq('id', patientId)
-  if (error) throw error
+  if (error) throwPatientWriteError(error)
 }
 
 export async function deletePatient(patientId: string): Promise<void> {

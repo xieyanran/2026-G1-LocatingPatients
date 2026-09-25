@@ -26,7 +26,7 @@ import {
   EmptyTitle,
 } from "@/lib/base-ui/empty"
 import { useRoundSearch } from "./round-controls"
-import { editPatient, setPatientLocation } from "@/lib/actions/patients"
+import { editPatient, setPatientLocation, swapPatientLocations } from "@/lib/actions/patients"
 import { EditPatientDialog } from "./edit-patient-dialog"
 import { useFloatingPanel, FloatingPanelFooter } from "./floating-panel"
 import { Button } from "@/lib/base-ui/button"
@@ -217,20 +217,15 @@ function CareLevelPopover({ patient }: { patient: Patient }) {
 function SwapConfirmContent({
   patientA,
   patientB,
-  fromBedKey,
-  toBedKey,
 }: {
   patientA: Patient
   patientB: Patient
-  fromBedKey: string
-  toBedKey: string
 }) {
   const { close } = useFloatingPanel()
 
   function confirm() {
     startTransition(() => {
-      setPatientLocation(patientA.id, parseBedKey(toBedKey))
-      setPatientLocation(patientB.id, parseBedKey(fromBedKey))
+      swapPatientLocations(patientA.id, patientB.id)
     })
     close()
   }
@@ -671,8 +666,6 @@ export function PatientList({ patients: initialPatients }: PatientListProps) {
           <SwapConfirmContent
             patientA={sourceData.patient}
             patientB={targetPatient}
-            fromBedKey={sourceData.fromBedKey}
-            toBedKey={targetId}
           />
         ),
       })

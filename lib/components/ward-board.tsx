@@ -10,7 +10,7 @@ import { locations } from "@/lib/constants/locations"
 import { quickIconById } from "@/lib/constants/quick-icons"
 import { careLevelColor } from "./care-level-badge"
 import { EditPatientDialog } from "./edit-patient-dialog"
-import { setPatientLocation } from "@/lib/actions/patients"
+import { setPatientLocation, swapPatientLocations } from "@/lib/actions/patients"
 import { useFloatingPanel, FloatingPanelFooter } from "./floating-panel"
 import { Button } from "@/lib/base-ui/button"
 import {
@@ -142,22 +142,15 @@ function PatientDragGhost({ patient }: { patient: Patient }) {
 function SwapConfirmContent({
   patientA,
   patientB,
-  fromBedKey,
-  toBedKey,
 }: {
   patientA: Patient
   patientB: Patient
-  fromBedKey: string
-  toBedKey: string
 }) {
   const { close } = useFloatingPanel()
 
   function confirm() {
-    const fromLoc = parseBedKey(fromBedKey)
-    const toLoc = parseBedKey(toBedKey)
     startTransition(() => {
-      setPatientLocation(patientA.id, toLoc)
-      setPatientLocation(patientB.id, fromLoc)
+      swapPatientLocations(patientA.id, patientB.id)
     })
     close()
   }
@@ -454,8 +447,6 @@ export function WardBoard({ patients: initialPatients }: WardBoardProps) {
           <SwapConfirmContent
             patientA={sourceData.patient}
             patientB={targetPatient}
-            fromBedKey={sourceData.fromBedKey}
-            toBedKey={targetId}
           />
         ),
       })

@@ -18,6 +18,10 @@ export async function editPatient(patientId: string, input: UpdatePatientInput):
   return dal.editPatient(patientId, input)
 }
 
+export async function swapPatientLocations(patientAId: string, patientBId: string): Promise<void> {
+  return dal.swapPatientLocations(patientAId, patientBId)
+}
+
 export async function deletePatient(patientId: string): Promise<void> {
   return dal.deletePatient(patientId)
 }
