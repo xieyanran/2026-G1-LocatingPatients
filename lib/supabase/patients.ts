@@ -10,11 +10,11 @@ type PatientRow = Tables<'patients'>
  * something a page could accidentally render unmasked, or that a viewer
  * could read out of React devtools.
  *
- * Known gap: this does not cover Supabase Realtime's `postgres_changes`
- * stream, which sends the full row (including the real name) over the
- * websocket before this mapper runs. Closing that would mean moving
- * realtime updates to a masked `realtime.broadcast_changes()` payload
- * instead of raw `postgres_changes` — real work, not done in this pass. */
+ * Realtime updates are masked before this mapper even runs: the client
+ * subscribes to a pre-masked `realtime.broadcast_changes()` payload (see
+ * supabase/migrations/20260925120000_realtime_broadcast_patients.sql)
+ * rather than raw `postgres_changes`, which used to send the full row —
+ * real name included — over the websocket. */
 export function mapPatientRow(row: PatientRow): Patient {
   return {
     id: row.id,

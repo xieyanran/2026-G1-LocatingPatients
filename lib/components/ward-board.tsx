@@ -366,27 +366,28 @@ export function WardBoard({ patients: initialPatients }: WardBoardProps) {
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase
-      .channel("patients-ward")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "patients" },
-        (payload) => {
-          setPatients((current) => {
-            if (payload.eventType === "INSERT") {
-              const p = mapPatientRow(payload.new as Tables<"patients">)
-              return [...current, p]
-            }
-            if (payload.eventType === "UPDATE") {
-              const p = mapPatientRow(payload.new as Tables<"patients">)
-              return current.map((c) => (c.id === p.id ? p : c))
-            }
-            if (payload.eventType === "DELETE") {
-              return current.filter((c) => c.id !== (payload.old as { id: string }).id)
-            }
-            return current
-          })
-        },
-      )
+      .channel("patients-changes", { config: { private: true } })
+      .on("broadcast", { event: "*" }, ({ payload }) => {
+        const { operation, record, old_record } = payload as {
+          operation: "INSERT" | "UPDATE" | "DELETE"
+          record: Tables<"patients"> | null
+          old_record: Tables<"patients"> | null
+        }
+        setPatients((current) => {
+          if (operation === "INSERT" && record) {
+            const p = mapPatientRow(record)
+            return [...current, p]
+          }
+          if (operation === "UPDATE" && record) {
+            const p = mapPatientRow(record)
+            return current.map((c) => (c.id === p.id ? p : c))
+          }
+          if (operation === "DELETE" && old_record) {
+            return current.filter((c) => c.id !== old_record.id)
+          }
+          return current
+        })
+      })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [])

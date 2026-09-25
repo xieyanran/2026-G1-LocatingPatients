@@ -8,9 +8,11 @@ import type { TablesUpdate } from './types'
 // A `nurse` may only change location, care level and quick-icon flags via
 // editPatient() — see the restrictedChanges check below. Everything else
 // (name, note, dates, personal number, protected-identity flag) requires
-// coordinator/admin. This is an application-layer restriction only — see
-// supabase/migrations/20260920100200_enable_rls.sql for why RLS itself is
-// row-level, not column-level.
+// coordinator/admin. This check is duplicated at the database level by a
+// trigger (supabase/migrations/20260925120100_enforce_nurse_column_restrictions.sql)
+// so it also holds for a write that reaches `patients` some other way —
+// see supabase/migrations/20260920100200_enable_rls.sql for why RLS's own
+// row-level policies can't express a column-level restriction by themselves.
 
 export async function addPatient(input: CreatePatientInput): Promise<string> {
   await requireRole('coordinator', 'admin')
